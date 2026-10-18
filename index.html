@@ -1,0 +1,517 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kotak Misteri Bilangan Bulat</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Fredoka for playful education look -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti for winning celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Tone.js for interactive sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            min-height: 100vh;
+        }
+        .font-game {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+        .box-glow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .box-glow:hover:not(:disabled) {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 30px -10px rgba(99, 102, 241, 0.5);
+        }
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col items-center justify-between p-4 min-h-screen">
+
+    <header class="w-full max-w-md mx-auto text-center mt-2 mb-4">
+        <div class="inline-block bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-white font-game text-sm tracking-wide mb-2 shadow-sm border border-white/30">
+            <i class="fa-solid fa-graduation-cap mr-1.5"></i> Game Edukasi Matematika
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-game font-bold text-white drop-shadow-md">
+            Kotak Misteri 🎁
+        </h1>
+        <p class="text-white/90 text-sm mt-1 font-medium">Topik Spesial: Operasi Bilangan Bulat</p>
+
+        <!-- Scoreboard & Lives -->
+        <div class="flex justify-between items-center bg-white/90 backdrop-blur-md rounded-2xl p-3.5 mt-4 shadow-lg border border-white">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shadow-inner">
+                    <i class="fa-solid fa-star text-lg"></i>
+                </div>
+                <div class="text-left">
+                    <span class="text-xs text-slate-500 block font-medium">SKOR</span>
+                    <span id="scoreDisplay" class="font-game text-xl font-bold text-slate-800">0</span>
+                </div>
+            </div>
+
+            <div class="h-8 w-px bg-slate-200"></div>
+
+            <div class="flex items-center space-x-2">
+                <div class="text-right">
+                    <span class="text-xs text-slate-500 block font-medium">NYAWA</span>
+                    <div id="livesDisplay" class="flex space-x-1 text-rose-500 text-base">
+                        <i class="fa-solid fa-heart"></i>
+                        <i class="fa-solid fa-heart"></i>
+                        <i class="fa-solid fa-heart"></i>
+                    </div>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shadow-inner">
+                    <i class="fa-solid fa-shield-heart text-lg"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-md mx-auto flex-1 flex flex-col justify-center">
+        <!-- Grid Kotak Misteri (6 Kotak) -->
+        <div id="boxGridContainer" class="grid grid-cols-2 gap-4 my-2">
+            <!-- Box items will be injected dynamically via JS -->
+        </div>
+
+        <!-- Question Modal / Overlay -->
+        <div id="questionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-300" id="modalContent">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="questionTag" class="bg-indigo-100 text-indigo-700 font-game text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
+                        Pertanyaan #1
+                    </span>
+                    <button onclick="closeModalDirect()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 transition">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <h3 id="questionText" class="font-game text-xl text-slate-800 font-bold mb-5 leading-snug">
+                    Berapakah hasil dari -15 + 8?
+                </h3>
+
+                <!-- Options Container -->
+                <div id="optionsContainer" class="space-y-3 mb-4">
+                    <!-- Option buttons generated dynamically -->
+                </div>
+
+                <!-- Explanation Box (Hidden initially) -->
+                <div id="feedbackContainer" class="hidden mt-4 p-4 rounded-2xl border transition-all animate-fadeIn">
+                    <div class="flex items-start space-x-3">
+                        <div id="feedbackIcon" class="text-2xl mt-0.5"></div>
+                        <div>
+                            <h4 id="feedbackTitle" class="font-game font-bold text-base"></h4>
+                            <p id="feedbackExplanation" class="text-sm mt-1 text-slate-600 leading-relaxed"></p>
+                        </div>
+                    </div>
+                    <button id="nextStepBtn" onclick="proceedAfterAnswer()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-game font-bold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-2">
+                        <span>Lanjut Jelajah</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over / Victory Modal -->
+        <div id="endGameModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white w-full max-w-md rounded-3xl p-6 text-center shadow-2xl border border-slate-100 transform animate-bounce-short">
+                <div id="endGameIconContainer" class="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl mb-4 shadow-inner">
+                    🏆
+                </div>
+                <h2 id="endGameTitle" class="font-game text-2xl font-bold text-slate-800 mb-2">Permainan Selesai!</h2>
+                <p id="endGameMessage" class="text-slate-600 text-sm mb-6 leading-relaxed">Kamu telah membuka semua kotak misteri dengan hebat!</p>
+                
+                <div class="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100 flex justify-around items-center">
+                    <div>
+                        <span class="text-xs text-slate-400 block font-medium">SKOR AKHIR</span>
+                        <span id="finalScore" class="font-game text-3xl font-bold text-indigo-600">0</span>
+                    </div>
+                    <div class="h-10 w-px bg-slate-200"></div>
+                    <div>
+                        <span class="text-xs text-slate-400 block font-medium">KOTAK TERBUKA</span>
+                        <span id="finalBoxes" class="font-game text-3xl font-bold text-emerald-600">6/6</span>
+                    </div>
+                </div>
+
+                <button onclick="resetGame()" class="w-full bg-gradient-to-r from-indigo-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white font-game font-bold py-3.5 px-6 rounded-2xl shadow-xl transition transform active:scale-95 flex items-center justify-center space-x-2 text-base">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Main Lagi (Acak Kotak)</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full max-w-md mx-auto text-center mt-4 text-white/80 text-xs font-medium">
+        <p>Kotak Misteri Bilangan Bulat &bull; Belajar Seru Interaktif</p>
+    </footer>
+
+    <script>
+        // Bank Soal Bilangan Bulat yang Edukatif dan Variatif
+        const questionBank = [
+            {
+                id: 1,
+                question: "Berapakah hasil dari operasi hitung: -12 + 19?",
+                options: ["7", "-7", "31", "-31"],
+                correct: 0,
+                explanation: "Karena 19 lebih besar dari 12, maka hasil pengurangan 19 - 12 = 7 dengan tanda positif."
+            },
+            {
+                id: 2,
+                question: "Suhu di dalam kulkas mula-mula -4°C. Saat dimatikan, suhunya naik 3°C setiap 10 menit. Berapa suhu setelah 20 menit?",
+                options: ["-10°C", "2°C", "-2°C", "6°C"],
+                correct: 1,
+                explanation: "Kenaikan suhu total = 2 x 3°C = 6°C. Suhu akhir = -4°C + 6°C = 2°C."
+            },
+            {
+                id: 3,
+                question: "Berapakah hasil dari -8 × (-6)?",
+                options: ["-48", "48", "-14", "14"],
+                correct: 1,
+                explanation: "Perkalian dua bilangan bulat negatif akan menghasilkan bilangan bulat positif. 8 × 6 = 48."
+            },
+            {
+                id: 4,
+                question: "Tentukan hasil dari operasi campuran: 24 : (-4) + 5 =",
+                options: ["-1", "1", "-11", "11"],
+                correct: 0,
+                explanation: "Kerjakan pembagian dulu: 24 : (-4) = -6. Kemudian -6 + 5 = -1."
+            },
+            {
+                id: 5,
+                question: "Seekor lumba-lumba berenang 15 meter di bawah permukaan laut. Ia melompat naik setinggi 7 meter ke udara. Berapa posisi ketinggian lumba-lumba sekarang?",
+                options: ["-22 meter", "8 meter", "-8 meter", "22 meter"],
+                correct: 2,
+                explanation: "Posisi awal -15 meter, naik 7 meter berarti -15 + 7 = -8 meter (masih 8 meter di bawah permukaan laut)."
+            },
+            {
+                id: 6,
+                question: "Berapakah hasil dari -35 - (-15)?",
+                options: ["-50", "20", "-20", "50"],
+                correct: 2,
+                explanation: "Pengurangan dengan bilangan negatif sama dengan penjumlahan dengan lawannya: -35 + 15 = -20."
+            }
+        ];
+
+        let gameState = {
+            score: 0,
+            lives: 3,
+            boxes: [], // 6 boxes initialized randomly
+            openedCount: 0,
+            currentActiveBoxId: null,
+            currentQuestionIndex: null,
+            isAnswered: false
+        };
+
+        // Initialize Audio Synth using Tone.js
+        let synth;
+        function initAudio() {
+            if (!synth) {
+                synth = new Tone.Synth().toDestination();
+            }
+            if (Tone.context.state !== 'running') {
+                Tone.start();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                initAudio();
+                if (type === 'click') {
+                    synth.triggerAttackRelease("C5", "16n");
+                } else if (type === 'correct') {
+                    synth.triggerAttackRelease("G4", "8n");
+                    setTimeout(() => synth.triggerAttackRelease("C5", "8n"), 100);
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease("G3", "8n");
+                    setTimeout(() => synth.triggerAttackRelease("E3", "8n"), 150);
+                } else if (type === 'win') {
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("C4", "8n", now);
+                    synth.triggerAttackRelease("E4", "8n", now + 0.1);
+                    synth.triggerAttackRelease("G4", "8n", now + 0.2);
+                    synth.triggerAttackRelease("C5", "4n", now + 0.3);
+                }
+            } catch (e) {
+                console.log("Audio context prevented or not supported.");
+            }
+        }
+
+        // Initialize and Shuffle Game
+        function initGame() {
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.openedCount = 0;
+            gameState.currentActiveBoxId = null;
+            gameState.isAnswered = false;
+
+            // Shuffle questions and map to 6 boxes
+            const shuffledQuestions = [...questionBank].sort(() => Math.random() - 0.5);
+            gameState.boxes = shuffledQuestions.map((q, index) => ({
+                id: index + 1,
+                questionData: q,
+                isOpened: false
+            }));
+
+            updateUI();
+            renderBoxes();
+            document.getElementById('endGameModal').classList.add('hidden');
+        }
+
+        // Render Mystery Boxes in Grid
+        function renderBoxes() {
+            const container = document.getElementById('boxGridContainer');
+            container.innerHTML = '';
+
+            gameState.boxes.forEach((box, idx) => {
+                const boxEl = document.createElement('button');
+                boxEl.className = `relative h-28 rounded-3xl p-4 font-game flex flex-col items-center justify-center transition-all duration-300 box-glow border-2 ${
+                    box.isOpened 
+                    ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-default opacity-70 shadow-none transform-none' 
+                    : 'bg-gradient-to-br from-white to-slate-50 border-white/80 text-indigo-600 hover:border-indigo-300 cursor-pointer'
+                }`;
+                boxEl.disabled = box.isOpened;
+                boxEl.onclick = () => openBox(box.id);
+
+                if (box.isOpened) {
+                    boxEl.innerHTML = `
+                        <div class="w-10 h-10 rounded-2xl bg-slate-200 text-slate-400 flex items-center justify-center mb-1">
+                            <i class="fa-solid fa-box-open text-lg"></i>
+                        </div>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Terbuka</span>
+                    `;
+                } else {
+                    boxEl.innerHTML = `
+                        <div class="absolute -top-3 -right-2 bg-pink-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-md animate-pulse">
+                            ?
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2 shadow-inner group-hover:scale-110 transition">
+                            <i class="fa-solid fa-gift text-2xl"></i>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700">Kotak ${box.id}</span>
+                    `;
+                }
+                container.appendChild(boxEl);
+            });
+        }
+
+        // Update Score and Lives UI
+        function updateUI() {
+            document.getElementById('scoreDisplay').innerText = gameState.score;
+            
+            const livesContainer = document.getElementById('livesDisplay');
+            let heartsHtml = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < gameState.lives) {
+                    heartsHtml += '<i class="fa-solid fa-heart text-rose-500"></i>';
+                } else {
+                    heartsHtml += '<i class="fa-regular fa-heart text-slate-300"></i>';
+                }
+            }
+            livesContainer.innerHTML = heartsHtml;
+        }
+
+        // Open Box Action
+        function openBox(boxId) {
+            playSound('click');
+            const box = gameState.boxes.find(b => b.id === boxId);
+            if (!box || box.isOpened) return;
+
+            gameState.currentActiveBoxId = boxId;
+            const q = box.questionData;
+
+            // Populate Modal
+            document.getElementById('questionTag').innerText = `Kotak Misteri #${boxId}`;
+            document.getElementById('questionText').innerText = q.question;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-4 rounded-2xl font-medium text-slate-700 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200/80 transition flex items-center justify-between group active:scale-[0.98]`;
+                btn.innerHTML = `
+                    <span class="flex items-center space-x-3">
+                        <span class="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 font-game font-bold flex items-center justify-center text-sm shadow-sm transition">
+                            ${String.fromCharCode(65 + idx)}
+                        </span>
+                        <span class="text-base">${opt}</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-indigo-500 transition"></i>
+                `;
+                btn.onclick = () => submitAnswer(idx, q.correct, q.explanation);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Hide feedback section initially
+            document.getElementById('feedbackContainer').classList.add('hidden');
+            document.getElementById('optionsContainer').classList.remove('pointer-events-none');
+
+            // Show Modal with animation
+            const modal = document.getElementById('questionModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('modalContent').classList.remove('scale-95');
+                document.getElementById('modalContent').classList.add('scale-100');
+            }, 10);
+        }
+
+        // Handle Answer Submission & Feedback
+        function submitAnswer(selectedIndex, correctIndex, explanationText) {
+            if (gameState.isAnswered) return;
+            gameState.isAnswered = true;
+
+            // Disable further option clicks
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.classList.add('pointer-events-none');
+            const optionButtons = optionsContainer.getElementsByTagName('button');
+
+            const isCorrect = (selectedIndex === correctIndex);
+            
+            // Highlight options
+            for (let i = 0; i < optionButtons.length; i++) {
+                if (i === correctIndex) {
+                    optionButtons[i].classList.remove('bg-slate-50', 'hover:bg-indigo-50', 'hover:text-indigo-700', 'border-slate-200');
+                    optionButtons[i].classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-800');
+                } else if (i === selectedIndex && !isCorrect) {
+                    optionButtons[i].classList.remove('bg-slate-50', 'hover:bg-indigo-50', 'hover:text-indigo-700', 'border-slate-200');
+                    optionButtons[i].classList.add('bg-rose-50', 'border-rose-500', 'text-rose-800');
+                }
+            }
+
+            // Feedback UI element
+            const feedbackBox = document.getElementById('feedbackContainer');
+            const feedbackIcon = document.getElementById('feedbackIcon');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackExplanation = document.getElementById('feedbackExplanation');
+            const nextBtn = document.getElementById('nextStepBtn');
+
+            feedbackBox.classList.remove('hidden');
+
+            if (isCorrect) {
+                playSound('correct');
+                gameState.score += 20;
+                updateUI();
+
+                // Confetti celebration
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+
+                feedbackBox.className = "mt-4 p-4 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-900 transition-all animate-fadeIn";
+                feedbackIcon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
+                feedbackTitle.innerText = "Hebat! Jawaban Benar 🎉 (+20 Poin)";
+                nextBtn.className = "w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-game font-bold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-2";
+            } else {
+                playSound('wrong');
+                gameState.lives -= 1;
+                updateUI();
+
+                feedbackBox.className = "mt-4 p-4 rounded-2xl border bg-rose-50 border-rose-200 text-rose-900 transition-all animate-fadeIn";
+                feedbackIcon.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-600"></i>';
+                feedbackTitle.innerText = "Kurang Tepat ❌";
+                nextBtn.className = "w-full mt-4 bg-rose-600 hover:bg-rose-700 text-white font-game font-bold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-2";
+            }
+
+            feedbackExplanation.innerText = explanationText;
+
+            // Mark box as opened in state
+            const activeBox = gameState.boxes.find(b => b.id === gameState.currentActiveBoxId);
+            if (activeBox) {
+                activeBox.isOpened = true;
+                gameState.openedCount++;
+            }
+        }
+
+        // Proceed after answering or closing modal
+        function proceedAfterAnswer() {
+            gameState.isAnswered = false;
+            closeModalDirect();
+
+            // Check if game is over (all boxes opened or lives ran out)
+            if (gameState.lives <= 0 || gameState.openedCount >= gameState.boxes.length) {
+                setTimeout(showEndGameModal, 400);
+            } else {
+                renderBoxes();
+            }
+        }
+
+        function closeModalDirect() {
+            const modal = document.getElementById('questionModal');
+            modal.classList.add('opacity-0');
+            document.getElementById('modalContent').classList.remove('scale-100');
+            document.getElementById('modalContent').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                gameState.isAnswered = false;
+            }, 300);
+        }
+
+        // Show Game Over / Victory Modal
+        function showEndGameModal() {
+            const modal = document.getElementById('endGameModal');
+            const iconContainer = document.getElementById('endGameIconContainer');
+            const titleEl = document.getElementById('endGameTitle');
+            const msgEl = document.getElementById('endGameMessage');
+            
+            document.getElementById('finalScore').innerText = gameState.score;
+            document.getElementById('finalBoxes').innerText = `${gameState.openedCount}/${gameState.boxes.length}`;
+
+            if (gameState.lives <= 0) {
+                playSound('wrong');
+                iconContainer.className = "w-20 h-20 mx-auto rounded-3xl bg-rose-100 text-rose-600 flex items-center justify-center text-4xl mb-4 shadow-inner";
+                iconContainer.innerHTML = '💡';
+                titleEl.innerText = "Tetap Semangat!";
+                msgEl.innerText = "Nyawa kamu habis. Pelajari lagi konsep operasi bilangan bulat dan coba buka kotaknya sekali lagi!";
+            } else {
+                playSound('win');
+                iconContainer.className = "w-20 h-20 mx-auto rounded-3xl bg-amber-100 text-amber-600 flex items-center justify-center text-4xl mb-4 shadow-inner";
+                iconContainer.innerHTML = '🏆';
+                titleEl.innerText = "Luar Biasa! Hebat Sekali!";
+                msgEl.innerText = "Kamu berhasil membuka seluruh kotak misteri dan menaklukkan tantangan bilangan bulat dengan cemerlang!";
+                
+                confetti({
+                    particleCount: 150,
+                    spread: 100,
+                    origin: { y: 0.5 }
+                });
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function resetGame() {
+            playSound('click');
+            initGame();
+        }
+
+        // Start game on window load
+        window.onload = function() {
+            initGame();
+        };
+    </script>
+</body>
+</html>
+
+```
